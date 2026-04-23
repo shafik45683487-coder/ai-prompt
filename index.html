@@ -129,16 +129,16 @@ function addMessage(text, className) {
   const msg = document.createElement("div");
   msg.className = "message " + className;
 
-  const codeRegex = /```([\s\S]*?)```/g;
+  const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
 
-  let formatted = text.replace(codeRegex, (match, code) => {
-    return `
-      <pre>
-        <button class="copy-btn">Copy</button>
-        <code>${escapeHTML(code)}</code>
-      </pre>
-    `;
-  });
+  let formatted = text.replace(codeRegex, (match, lang, code) => {
+  return `
+    <pre>
+      <button class="copy-btn">Copy</button>
+      <code class="language-${lang || 'plaintext'}">${escapeHTML(code)}</code>
+    </pre>
+  `;
+});
 
   msg.innerHTML = formatted;
 
@@ -174,7 +174,6 @@ async function sendMessage() {
 
   if (!prompt) return;
 
-  // Hide welcome screen after first message
   document.getElementById("welcome").style.display = "none";
 
   addMessage(prompt, "user");
@@ -187,7 +186,11 @@ async function sendMessage() {
 
   try {
     const response = await puter.ai.chat(prompt);
-    loadingMsg.innerText = response.message.content;
+
+    // 🔥 IMPORTANT: replace loading with formatted message
+    loadingMsg.remove();
+    addMessage(response.message.content, "bot");
+
   } catch (err) {
     loadingMsg.innerText = "Error: " + err.message;
   }
