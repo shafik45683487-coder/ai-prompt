@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>AI Chat App</title>
-<script src="https://js.puter.com/v2/"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://js.puter.com/v2/"></script>
 
 <style>
 body {
@@ -14,6 +16,26 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+}
+  pre {
+  background: #1e1e1e;
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  position: relative;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #10a37f;
+  border: none;
+  color: white;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
 }
 #welcome {
   position: absolute;
@@ -108,11 +130,49 @@ const chat = document.getElementById("chat");
 function addMessage(text, className) {
   const msg = document.createElement("div");
   msg.className = "message " + className;
-  msg.innerText = text;
+
+  // Detect code blocks (```code```)
+  const codeRegex = /```([\s\S]*?)```/g;
+
+  let formatted = text.replace(codeRegex, (match, code) => {
+    return `
+      <pre>
+        <button class="copy-btn">Copy</button>
+        <code>${escapeHTML(code)}</code>
+      </pre>
+    `;
+  });
+
+  msg.innerHTML = formatted;
+
   chat.appendChild(msg);
+
+  // Highlight code
+  msg.querySelectorAll("pre code").forEach((block) => {
+    hljs.highlightElement(block);
+  });
+
+  // Copy button logic
+  msg.querySelectorAll(".copy-btn").forEach(btn => {
+    btn.onclick = function () {
+      const code = this.nextElementSibling.innerText;
+      navigator.clipboard.writeText(code);
+      this.innerText = "Copied!";
+      setTimeout(() => this.innerText = "Copy", 1500);
+    };
+  });
+
   chat.scrollTop = chat.scrollHeight;
 }
-
+function escapeHTML(str) {
+  return str.replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[tag]));
+}
 async function sendMessage() {
   const textarea = document.getElementById("prompt");
   const prompt = textarea.value.trim();
