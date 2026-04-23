@@ -156,7 +156,21 @@ button {
 
 <script>
 const chat = document.getElementById("chat");
+const textarea = document.getElementById("prompt");
 
+// Auto resize
+textarea.addEventListener("input", () => {
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+});
+
+// Enter to send
+textarea.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
 function addMessage(text, className) {
   const msg = document.createElement("div");
   msg.className = "message " + className;
@@ -207,25 +221,13 @@ function escapeHTML(str) {
 }
 async function sendMessage() {
   const textarea = document.getElementById("prompt");
-  const textarea = document.getElementById("prompt");
-textarea.addEventListener("input", () => {
-  textarea.style.height = "auto";
-  textarea.style.height = textarea.scrollHeight + "px";
-});
-  textarea.addEventListener("keydown", function(e) {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
   const prompt = textarea.value.trim();
 
   if (!prompt) return;
 
-  document.getElementById("welcome").style.display = "none";
-
   addMessage(prompt, "user");
   textarea.value = "";
+  textarea.style.height = "auto";
 
   const loadingMsg = document.createElement("div");
   loadingMsg.className = "message bot";
@@ -235,7 +237,6 @@ textarea.addEventListener("input", () => {
   try {
     const response = await puter.ai.chat(prompt);
 
-    // 🔥 IMPORTANT: replace loading with formatted message
     loadingMsg.remove();
     addMessage(response.message.content, "bot");
 
@@ -245,6 +246,7 @@ textarea.addEventListener("input", () => {
 
   chat.scrollTop = chat.scrollHeight;
 }
+  hljs.configure({ ignoreUnescapedHTML: true });
 </script>
 
 </body>
